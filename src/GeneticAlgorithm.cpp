@@ -20,48 +20,46 @@ GeneticAlgorithm::GeneticAlgorithm(unsigned long popSize, int chromosomeLength, 
           m_evaluationsCount(0),
           gen(std::random_device{}()),
           dis(0.0, 1.0) {
-    // Inicializar população
+    // Initialize population
     for (unsigned long i = 0; i < popSize; i++) {
         m_population.push_back(Individual(chromosomeLength, m_problem));
     }
 
-    m_bestIndividual = m_population[0];
+    m_bestIndividual = m_population[0];  // Store the best individual
 }
 
 Individual GeneticAlgorithm::tournamentSelection(int tournamentSize) {
     std::vector<Individual> tournament;
     for (int i = 0; i < tournamentSize; i++) {
-        int randomId = dis(gen) * m_popSize;
+        int randomId = dis(gen) * m_popSize;  // Select a random individual
         tournament.push_back(m_population[randomId]);
     }
     sort(tournament.begin(), tournament.end(), [](Individual &ind1, Individual &ind2) {
-        return ind1.m_fitness <
-               ind2.m_fitness;  // Ordena os indivíduos por aptidão (ordem crescente)
+        return ind1.m_fitness < ind2.m_fitness;  // Sort individuals by fitness (ascending order)
     });
-    return tournament[0];  // Retorna o indivíduo com a melhor aptidão
+    return tournament[0];  // Return the individual with the best fitness
 }
 
 void GeneticAlgorithm::crossover(Individual &parent1, Individual &parent2) {
     if ((double)rand() / RAND_MAX < m_crossoverRate) {
         int crossPoint = rand() % m_chromosomeLength;
         for (int i = crossPoint; i < m_chromosomeLength; i++) {
-            std::swap(parent1.m_chromosome[i], parent2.m_chromosome[i]);
+            std::swap(parent1.m_chromosome[i], parent2.m_chromosome[i]);  // Perform the crossover
         }
-        parent1.m_fitness = parent1.calculateFitness();
-        parent2.m_fitness = parent2.calculateFitness();
+        parent1.m_fitness = parent1.calculateFitness();  // Update fitness
+        parent2.m_fitness = parent2.calculateFitness();  // Update fitness
 
-        m_evaluationsCount += 2;  // Incrementamos em 2, pois cada crossover gera dois novos
-                                  // indivíduos e realizamos uma avaliação de função para cada um
+        m_evaluationsCount += 2;  // Increment by 2, as each crossover generates two new individuals
+                                  // and we perform a function evaluation for each
     }
 }
 
 void GeneticAlgorithm::mutate(Individual &ind) {
     for (int i = 0; i < m_chromosomeLength; i++) {
         if (dis(gen) < m_mutationRate) {
-            ind.m_chromosome[i] += dis(gen) * 2 - 1;  // Adicione ruído entre -1 e 1
-            ind.m_fitness = ind.calculateFitness();
-            m_evaluationsCount++;  // Adiciona uma avaliação da função somente quando a mutação
-                                   // ocorre
+            ind.m_chromosome[i] += dis(gen) * 2 - 1;  // Add noise between -1 and 1
+            ind.m_fitness = ind.calculateFitness();   // Update fitness
+            m_evaluationsCount++;  // Add a function evaluation only when mutation occurs
         }
     }
 }
@@ -78,31 +76,30 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
         int prevEvaluationsCount = m_evaluationsCount;
         std::vector<Individual> newPopulation;
         for (unsigned long i = 0; i < m_popSize; i += 2) {
-            Individual parent1 = tournamentSelection(m_tournamentSize);
+            Individual parent1 =
+                tournamentSelection(m_tournamentSize);  // Select parents using tournament selection
             Individual parent2 = tournamentSelection(m_tournamentSize);
-            crossover(parent1, parent2);
-            mutate(parent1);
+            crossover(parent1, parent2);  // Perform crossover
+            mutate(parent1);              // Perform mutation
             mutate(parent2);
-            newPopulation.push_back(parent1);
+            newPopulation.push_back(parent1);  // Add new individuals to the new population
             if (newPopulation.size() < m_popSize) {
                 newPopulation.push_back(parent2);
             }
         }
-        m_population = newPopulation;
+        m_population = newPopulation;  // Replace the current population with the new population
         for (Individual &ind : m_population) {
             if (ind.m_fitness < m_bestIndividual.m_fitness) {
-                m_bestIndividual = ind;
+                m_bestIndividual = ind;  // Update the best individual if needed
             }
         }
-
-        // Registro das estatísticas a cada 2000D, 10000D, 20000D avaliações
+        // Record statistics at 2000D, 10000D, 20000D evaluations
         if ((prevEvaluationsCount < 2000 * m_chromosomeLength &&
              m_evaluationsCount >= 2000 * m_chromosomeLength) ||
             (prevEvaluationsCount < 10000 * m_chromosomeLength &&
              m_evaluationsCount >= 10000 * m_chromosomeLength) ||
             (prevEvaluationsCount < 20000 * m_chromosomeLength &&
              m_evaluationsCount >= 20000 * m_chromosomeLength)) {
-            // Coletar e armazenar estatísticas
             stats.bestResults.push_back(getBestFitness());
             stats.worstResults.push_back(getWorstFitness());
             stats.medianResults.push_back(getMedianFitness());

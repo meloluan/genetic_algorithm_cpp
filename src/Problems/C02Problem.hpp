@@ -129,12 +129,12 @@ public:
 
         double g_X = constraint(chromosome);
 
-        // Restrição g(X)
+        // Constraint g(X)
         if (g_X > 0.0) {
             penalty += g_X;
         }
 
-        // Limites do problema
+        // Limits of the problem
         for (double gene : chromosome) {
             if (gene < m_lowerBound) {
                 penalty += std::abs(gene - m_lowerBound);
@@ -151,25 +151,21 @@ public:
         std::array<int, 3> numViolations = {0, 0, 0};
         std::array<double, 3> totalViolations = {0.0, 0.0, 0.0};
 
-        // Limites do problema C01.
-        double lowerBound = -100.0;
-        double upperBound = 100.0;
-
         for (double xi : x) {
-            if (xi < lowerBound) {
+            if (xi < m_lowerBound) {
                 for (int i = 0; i < 3; ++i) {
                     numViolations[i]++;
-                    totalViolations[i] += lowerBound - xi;  // Distância do ponto ao limite inferior
+                    totalViolations[i] += m_lowerBound - xi;  // Distance from point to lower limit
                 }
-            } else if (xi > upperBound) {
+            } else if (xi > m_upperBound) {
                 for (int i = 0; i < 3; ++i) {
                     numViolations[i]++;
-                    totalViolations[i] += xi - upperBound;  // Distância do ponto ao limite superior
+                    totalViolations[i] += xi - m_upperBound;  // Distance from point to upper limit
                 }
             }
         }
 
-        // Calcular a média das violações
+        // Calculate the average of violations
         std::array<double, 3> meanViolations;
         for (int i = 0; i < 3; ++i) {
             meanViolations[i] =
