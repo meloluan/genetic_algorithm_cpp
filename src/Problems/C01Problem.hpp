@@ -1,19 +1,18 @@
-#include <array>
-#include <fstream>
-#include <sstream>
+#pragma once
+
+#include <cmath>
 #include <vector>
 
 #include "Individual.h"
 #include "Problem.h"
 
-class C02Problem : public Problem {
+class C01Problem : public Problem {
 public:
-    C02Problem() {
+    C01Problem() {
         m_lowerBound = -100.0;
         m_upperBound = 100.0;
+        m_name = "C01";
     }
-
-    std::vector<std::vector<double>> M;
 
     std::array<double, 100> o = {
         -2.8572876762843592e+01, -1.6020692917610326e+01, -3.4267350135311162e+01,
@@ -52,38 +51,12 @@ public:
         4.9804618432177662e+01,
     };
 
-    void loadM(const std::string &filename, int D) {
-        M.resize(D, std::vector<double>(D));
-        std::ifstream file(filename);
-        if (!file.is_open()) {
-            std::cerr << "Unable to open file: " << filename << std::endl;
-            return;
-        }
-        std::string line;
-        for (int i = 0; i < D; ++i) {
-            std::getline(file, line);
-            std::stringstream ss(line);
-            for (int j = 0; j < D; ++j) {
-                ss >> M[i][j];
-            }
-        }
-    }
-
     double objectiveFunction(std::vector<double> &x) override {
-        std::vector<double> z(x.size());
-        for (unsigned long i = 0; i < x.size(); ++i) {
-            z[i] = x[i] - o[i];
-        }
-        std::vector<double> y(x.size());
-        for (unsigned long i = 0; i < x.size(); ++i) {
-            for (unsigned long j = 0; j < x.size(); ++j) {
-                y[i] += M[i][j] * z[j];
-            }
-        }
         double sum = 0;
-        for (unsigned long i = 0; i < y.size(); ++i) {
+        for (unsigned long i = 0; i < x.size(); ++i) {
+            double z = x[i] - o[i];
             for (unsigned long j = 0; j <= i; ++j) {
-                sum += y[j] * y[j];
+                sum += z * z;
             }
         }
         return sum;
@@ -97,7 +70,6 @@ public:
         }
         return sum;
     }
-
     double penaltyFunction(std::vector<double> &chromosome) override {
         double penalty = 0.0;
 
@@ -106,15 +78,6 @@ public:
         // Restrição g(X)
         if (g_X > 0.0) {
             penalty += g_X;
-        }
-
-        // Restrição h_j(X)
-        double h_j_X = 0.0;  // Calcular h_j(X)
-        for (double xi : chromosome) {
-            h_j_X -= xi * sin(0.1 * M_PI * xi);
-        }
-        if (std::abs(h_j_X) > 0.0001) {
-            penalty += std::abs(h_j_X);
         }
 
         // Limites do problema
@@ -129,9 +92,10 @@ public:
         return penalty;
     }
 
-    std::pair<int, double> calculateViolations(std::vector<double> &x) {
-        int numViolations = 0;
-        double totalViolation = 0.0;
+    std::pair<std::array<int, 3>, std::array<double, 3>> calculateViolations(
+        std::vector<double> &x) {
+        std::array<int, 3> numViolations = {0, 0, 0};
+        std::array<double, 3> totalViolations = {0.0, 0.0, 0.0};
 
         // Limites do problema C01.
         double lowerBound = -100.0;
@@ -139,17 +103,29 @@ public:
 
         for (double xi : x) {
             if (xi < lowerBound) {
-                numViolations++;
-                totalViolation += lowerBound - xi;  // Distância do ponto ao limite inferior
+                for (int i = 0; i < 3; ++i) {
+                    numViolations[i]++;
+                    totalViolations[i] += lowerBound - xi;  // Distância do ponto ao limite inferior
+                }
             } else if (xi > upperBound) {
-                numViolations++;
-                totalViolation += xi - upperBound;  // Distância do ponto ao limite superior
+                for (int i = 0; i < 3; ++i) {
+                    numViolations[i]++;
+                    totalViolations[i] += xi - upperBound;  // Distância do ponto ao limite superior
+                }
             }
         }
 
         // Calcular a média das violações
-        double meanViolation = (numViolations > 0) ? totalViolation / numViolations : 0.0;
+        std::array<double, 3> meanViolations;
+        for (int i = 0; i < 3; ++i) {
+            meanViolations[i] =
+                (numViolations[i] > 0) ? totalViolations[i] / numViolations[i] : 0.0;
+        }
 
-        return {numViolations, meanViolation};
+        return {numViolations, meanViolations};
+    }
+    std::pair<double, double> multipleConstraint(std::vector<double> &x) override {
+        (void)x;
+        return {0.0, 0.0};
     }
 };

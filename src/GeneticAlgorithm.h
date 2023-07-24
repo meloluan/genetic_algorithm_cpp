@@ -17,7 +17,7 @@ public:
      *
      * This structure is used to collect and store various statistical measures such as the best,
      * worst, and median results obtained during the evolution process. It also stores information
-     * about constraint violations and 'v' values for each evaluation point.
+     * about constraint violations and 'v' values for each evaluation point, for all penalty values.
      *
      * @var    std::vector<double> Statistics::bestResults
      *         A vector storing the best fitness value found at each evaluation point.
@@ -28,19 +28,22 @@ public:
      * @var    std::vector<double> Statistics::medianResults
      *         A vector storing the median fitness value found at each evaluation point.
      *
-     * @var    std::vector<int> Statistics::constraintViolations
+     * @var    std::array<std::vector<int>> Statistics::constraintViolations
      *         A vector storing the number of constraint violations of the best individual at each
-     *         evaluation point.
+     *         evaluation point, for each penalty value.
      *
-     * @var    std::vector<double> Statistics::vValues
-     *         A vector storing the 'v' value of the best individual at each evaluation point.
+     * @var    std::array<std::vector<double>> Statistics::vValues
+     *         A vector storing the 'v' value of the best individual at each evaluation point, for
+     * each penalty value.
      */
     struct Statistics {
         std::vector<double> bestResults;
         std::vector<double> worstResults;
         std::vector<double> medianResults;
-        std::vector<int> constraintViolations;
-        std::vector<double> vValues;
+        std::array<std::vector<int>, 3> constraintViolations = {
+            std::vector<int>(), std::vector<int>(), std::vector<int>()};
+        std::array<std::vector<double>, 3> vValues = {std::vector<double>(), std::vector<double>(),
+                                                      std::vector<double>()};
     };
 
     /**
