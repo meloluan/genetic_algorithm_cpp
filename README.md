@@ -107,8 +107,6 @@ The results reveal the effectiveness and robustness of the algorithm on various 
 
 Please note that due to the stochastic nature of the Genetic Algorithm, results can vary between runs. The statistics reported here are based on multiple runs to account for this variability and provide a more accurate performance estimation.
 
-Remember, the `c` values are constraints, and `v` is a variable used in the problem formulation. In these tests, the values of `c` and `v` were all set to zero, but they can be adjusted according to the specific problem requirements.
-
 ## License
 
 This project is licensed under the terms of the MIT license.
