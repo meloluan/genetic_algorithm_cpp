@@ -86,6 +86,29 @@ Each problem C01-C05 in "Problems" directory represents a specific problem from 
 
 Please refer to each class's respective header file for a detailed description of its methods and members.
 
+# Test Results
+
+In this section, we present the performance statistics of our Genetic Algorithm applied on different test scenarios. The collected metrics include the average and median of best results, standard deviation of best results, and the worst result across all runs. For each test scenario, a set of constraint values `c` and a variable `v` are also shown, which were utilized in the problem formulation. Here is a summary of the results:
+
+| Test Name | Avg of Best Results | Median of Best Results | Std Dev of Best Results | Worst Result | c values | v |
+|---|---|---|---|---|---|---|
+| D10_PC01 | 2.49619e-05 | 1.80786e-05 | 1.98283e-05 | 8.48197e-05 | {0, 0, 0} | 0 |
+| D10_PC02 | 0.00395181 | 0.00316344 | 0.0024601 | 0.00902461 | {0, 0, 0} | 0 |
+| D10_PC03 | 11.969 | 11.9347 | 0.296948 | 12.5765 | {0, 0, 0} | 0 |
+| D10_PC04 | 0.00124326 | 0.000843704 | 0.0010409 | 0.00463215 | {0, 0, 0} | 0 |
+| D10_PC05 | 0.000555726 | 0.00046865 | 0.000470755 | 0.00204942 | {0, 0, 0} | 0 |
+| D30_PC01 | 8.82674e-05 | 7.69451e-05 | 4.79432e-05 | 0.000209332 | {0, 0, 0} | 0 |
+| D30_PC02 | 0.546156 | 0.545064 | 0.163575 | 0.940985 | {0, 0, 0} | 0 |
+| D30_PC03 | 115.714 | 115.713 | 4.22425e-05 | 115.714 | {0, 0, 0} | 0 |
+| D30_PC04 | 0.000972671 | 0.000960464 | 0.000351143 | 0.00177272 | {0, 0, 0} | 0 |
+| D30_PC05 | 722.213 | 0.000217851 | 1755.99 | 7042.65 | {0, 0, 0} | 0 |
+
+The results reveal the effectiveness and robustness of the algorithm on various scenarios with different complexity levels. The comprehensive statistics help us understand not only the overall performance but also the variability and consistency of the algorithm's outcomes. 
+
+Please note that due to the stochastic nature of the Genetic Algorithm, results can vary between runs. The statistics reported here are based on multiple runs to account for this variability and provide a more accurate performance estimation.
+
+Remember, the `c` values are constraints, and `v` is a variable used in the problem formulation. In these tests, the values of `c` and `v` were all set to zero, but they can be adjusted according to the specific problem requirements.
+
 ## License
 
 This project is licensed under the terms of the MIT license.

@@ -41,16 +41,23 @@ Individual GeneticAlgorithm::tournamentSelection(int tournamentSize) {
 }
 
 void GeneticAlgorithm::crossover(Individual &parent1, Individual &parent2) {
-    if ((double)rand() / RAND_MAX < m_crossoverRate) {
-        int crossPoint = rand() % m_chromosomeLength;
-        for (int i = crossPoint; i < m_chromosomeLength; i++) {
-            std::swap(parent1.m_chromosome[i], parent2.m_chromosome[i]);  // Perform the crossover
-        }
-        parent1.m_fitness = parent1.calculateFitness();  // Update fitness
-        parent2.m_fitness = parent2.calculateFitness();  // Update fitness
+    // Check if crossover should occur based on the crossover rate
+    if (dis(gen) < m_crossoverRate) {
+        // Determine the crossover point
+        std::uniform_int_distribution<> disInt(0, m_chromosomeLength - 1);
+        int crossPoint = disInt(gen);
 
-        m_evaluationsCount += 2;  // Increment by 2, as each crossover generates two new individuals
-                                  // and we perform a function evaluation for each
+        // Perform crossover after the determined point
+        for (int i = crossPoint; i < m_chromosomeLength; i++) {
+            std::swap(parent1.m_chromosome[i], parent2.m_chromosome[i]);
+        }
+
+        // Recalculate fitness for the two new individuals
+        parent1.m_fitness = parent1.calculateFitness();
+        parent2.m_fitness = parent2.calculateFitness();
+
+        // Increment the count of function evaluations
+        m_evaluationsCount += 2;
     }
 }
 
