@@ -112,10 +112,10 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
             stats.medianResults.push_back(getMedianFitness());
 
             // Print statistics
-            std::cout << "Function evaluations: " << m_evaluationsCount << '\n';
-            std::cout << "Best fitness: " << getBestFitness() << '\n';
-            std::cout << "Worst fitness: " << getWorstFitness() << '\n';
-            std::cout << "Median fitness: " << getMedianFitness() << '\n';
+            // std::cout << "Function evaluations: " << m_evaluationsCount << '\n';
+            // std::cout << "Best fitness: " << getBestFitness() << '\n';
+            // std::cout << "Worst fitness: " << getWorstFitness() << '\n';
+            // std::cout << "Median fitness: " << getMedianFitness() << '\n';
 
             // Calculate violations and v for the best individual
             auto chromosome = m_bestIndividual.getChromosome();
@@ -127,11 +127,12 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
                 stats.vValues[i].push_back(v[i]);
             }
 
-            std::cout
-                << "Number of constraints violated by the best individual for each penalty value: "
-                << violations[0] << ", " << violations[1] << ", " << violations[2] << '\n';
-            std::cout << "Value of v for the best individual for each penalty value: " << v[0]
-                      << ", " << v[1] << ", " << v[2] << '\n';
+            // std::cout
+            //     << "Number of constraints violated by the best individual for each penalty value:
+            //     "
+            //     << violations[0] << ", " << violations[1] << ", " << violations[2] << '\n';
+            // std::cout << "Value of v for the best individual for each penalty value: " << v[0]
+            //           << ", " << v[1] << ", " << v[2] << '\n';
         }
     }
     return stats;

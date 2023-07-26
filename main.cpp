@@ -4,7 +4,9 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <numeric>
+#include <thread>
 
 #include "GeneticAlgorithm.h"
 #include "Problems/C01Problem.hpp"
@@ -12,6 +14,84 @@
 #include "Problems/C03Problem.hpp"
 #include "Problems/C04Problem.hpp"
 #include "Problems/C05Problem.hpp"
+
+std::mutex resultMutex;
+double bestResult =
+    std::numeric_limits<double>::max();  // Initialize with the highest possible value
+std::string bestParameters;
+
+void runAndCompare(unsigned long popSize, double mutationRate, double crossoverRate,
+                   int tournamentSize, const std::vector<std::shared_ptr<Problem>> &problems,
+                   const std::vector<int> &dimensions, int RUNS);
+std::pair<double, std::string> runGeneticAlgorithm(
+    unsigned long popSize, double mutationRate, double crossoverRate, int tournamentSize,
+    const std::vector<std::shared_ptr<Problem>> &problems, const std::vector<int> &dimensions,
+    const int RUNS);
+double calculateMedian(std::vector<double> values);
+void printStats(GeneticAlgorithm::Statistics stats);
+
+struct Stats {
+    double bestResultsMean;
+    double bestResultsMedian;
+    double bestResultsStdev;
+    double worstResult;
+    double bestResult;
+    std::array<int, 3> totalViolations;
+    double avgVValue;
+};
+
+int main() {
+    const int RUNS = 25;
+
+    std::vector<int> dimensions = {10, 30};
+
+    // Define ranges and increments for parameters to be varied
+    std::vector<unsigned long> popSizes = {30, 50, 70};
+    std::vector<double> mutationRates = {0.01, 0.05, 0.1};
+    std::vector<double> crossoverRates = {0.6, 0.7, 0.8};
+    std::vector<int> tournamentSizes = {3, 5, 7};
+
+    std::vector<std::thread> threads;
+
+    // Loop to vary parameters
+    for (unsigned long popSize : popSizes) {
+        for (double mutationRate : mutationRates) {
+            for (double crossoverRate : crossoverRates) {
+                for (int tournamentSize : tournamentSizes) {
+                    std::vector<std::shared_ptr<Problem>> problems;
+                    problems.push_back(std::make_shared<C01Problem>());
+                    problems.push_back(std::make_shared<C02Problem>());
+                    problems.push_back(std::make_shared<C03Problem>());
+                    problems.push_back(std::make_shared<C04Problem>());
+                    problems.push_back(std::make_shared<C05Problem>());
+
+                    threads.push_back(std::thread(runAndCompare, popSize, mutationRate,
+                                                  crossoverRate, tournamentSize, problems,
+                                                  dimensions, RUNS));
+                }
+            }
+        }
+    }
+    // Waits for all threads to finish
+    for (auto &thread : threads) {
+        thread.join();
+    }
+
+    std::cout << "Best parameters: " << bestParameters << " with result: " << bestResult << '\n';
+    return 0;
+}
+
+void runAndCompare(unsigned long popSize, double mutationRate, double crossoverRate,
+                   int tournamentSize, const std::vector<std::shared_ptr<Problem>> &problems,
+                   const std::vector<int> &dimensions, int RUNS) {
+    auto [result, parameters] = runGeneticAlgorithm(popSize, mutationRate, crossoverRate,
+                                                    tournamentSize, problems, dimensions, RUNS);
+    std::lock_guard<std::mutex> lock(resultMutex);
+    if (result < bestResult) {
+        bestResult = result;
+        bestParameters = parameters;
+    }
+}
 
 double calculateMedian(std::vector<double> values) {
     size_t size = values.size();
@@ -32,19 +112,10 @@ void printStats(GeneticAlgorithm::Statistics stats) {
               << *std::max_element(stats.worstResults.begin(), stats.worstResults.end()) << '\n';
     std::cout << "Median Result: " << stats.medianResults[stats.medianResults.size() / 2] << '\n';
 
-    // Calcula a média dos melhores resultados
+    // Calculate the average of the best results
     double meanBest = std::accumulate(stats.bestResults.begin(), stats.bestResults.end(), 0.0) /
                       stats.bestResults.size();
     std::cout << "Mean of Best Results: " << meanBest << '\n';
-
-    // Calcula o desvio padrão dos melhores resultados
-    double stdDevBest =
-        std::sqrt(std::accumulate(stats.bestResults.begin(), stats.bestResults.end(), 0.0,
-                                  [meanBest](double a, double b) {
-                                      return a + (b - meanBest) * (b - meanBest);
-                                  }) /
-                  stats.bestResults.size());
-    std::cout << "Standard Deviation of Best Results: " << stdDevBest << '\n';
 
     // Imprime o número de violações de restrições
     int totalViolations = 0;
@@ -53,7 +124,6 @@ void printStats(GeneticAlgorithm::Statistics stats) {
     }
     std::cout << "Number of Constraint Violations: " << totalViolations << '\n';
 
-    // Imprime o valor de v
     double totalV = 0;
     for (const auto &v : stats.vValues) {
         totalV += std::accumulate(v.begin(), v.end(), 0.0);
@@ -63,34 +133,10 @@ void printStats(GeneticAlgorithm::Statistics stats) {
     std::cout << "-------------------------\n";
 }
 
-struct Stats {
-    double bestResultsMean;
-    double bestResultsMedian;
-    double bestResultsStdev;
-    double worstResult;
-    std::array<int, 3> totalViolations;
-    double avgVValue;
-};
-
-int main() {
-    const int RUNS = 25;
-    unsigned long popSize = 40;
-    double mutationRate = 0.01;
-    double crossoverRate = 0.7;
-    int tournamentSize = 3;
-
-    std::vector<int> dimensions = {10, 30};
-
-    std::vector<std::shared_ptr<Problem>> problems;
-    problems.push_back(std::make_shared<C01Problem>());
-    problems.push_back(std::make_shared<C02Problem>());
-    problems.push_back(std::make_shared<C03Problem>());
-    problems.push_back(std::make_shared<C04Problem>());
-    problems.push_back(std::make_shared<C05Problem>());
-
-    // std::ofstream resultsFile;
-    // resultsFile.open("results.csv");
-
+std::pair<double, std::string> runGeneticAlgorithm(
+    unsigned long popSize, double mutationRate, double crossoverRate, int tournamentSize,
+    const std::vector<std::shared_ptr<Problem>> &problems, const std::vector<int> &dimensions,
+    const int RUNS) {
     std::map<std::string, Stats> allStats;
 
     for (auto D : dimensions) {
@@ -115,7 +161,7 @@ int main() {
                                     tournamentSize, problemInstance.get());
                 auto stats = ga.evolve();
                 Individual bestIndividual = ga.getBestIndividual();
-                bestIndividual.print();
+                // bestIndividual.print();
 
                 allBestResults.push_back(bestIndividual.getFitness());
                 allViolations.push_back(stats.constraintViolations.back());
@@ -133,6 +179,7 @@ int main() {
                 std::sqrt(sq_sum / allBestResults.size() -
                           runStats.bestResultsMean * runStats.bestResultsMean);
             runStats.worstResult = *std::max_element(allBestResults.begin(), allBestResults.end());
+            runStats.bestResult = *std::min_element(allBestResults.begin(), allBestResults.end());
 
             std::array<int, 3> totalViolations = {0, 0, 0};
             std::array<double, 3> avgVValues = {0, 0, 0};
@@ -157,6 +204,7 @@ int main() {
 
     for (const auto &pair : allStats) {
         std::cout << "---- Overall statistics for " << pair.first << " ----\n";
+        std::cout << "Best result across all runs: " << pair.second.bestResult << '\n';
         std::cout << "Average of best results: " << pair.second.bestResultsMean << '\n';
         std::cout << "Median of best results: " << pair.second.bestResultsMedian << '\n';
         std::cout << "Standard deviation of best results: " << pair.second.bestResultsStdev << '\n';
@@ -167,6 +215,14 @@ int main() {
         std::cout << "v = " << pair.second.avgVValue << '\n';
     }
 
-    // resultsFile.close();
-    return 0;
+    double sumBestResult = 0;
+    for (const auto &pair : allStats) {
+        sumBestResult += pair.second.bestResult;
+    }
+
+    std::string parameters = "PopSize: " + std::to_string(popSize) +
+                             ", MutRate: " + std::to_string(mutationRate) +
+                             ", CrossRate: " + std::to_string(crossoverRate) +
+                             ", TourSize: " + std::to_string(tournamentSize);
+    return {sumBestResult, parameters};
 }

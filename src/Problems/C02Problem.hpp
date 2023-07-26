@@ -92,6 +92,10 @@ public:
             std::cerr << "Mismatch vector size" << std::endl;
             return -1;
         }
+        if (M[0].size() != x.size()) {
+            std::cerr << "Mismatch matrix size" << std::endl;
+            return -1;
+        }
         std::vector<double> z(x.size());
         for (unsigned long i = 0; i < x.size(); ++i) {
             z[i] = x[i] - o[i];
