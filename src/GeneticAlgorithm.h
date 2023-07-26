@@ -55,10 +55,11 @@ public:
      * @param maxEvaluations The maximum number of evaluations.
      * @param tournamentSize The tournament size.
      * @param problem The optimization problem to solve.
+     * @param debug Whether to print debug information.
      */
     GeneticAlgorithm(unsigned long popSize, int chromosomeLength, double mutationRate,
-                     double crossoverRate, int maxEvaluations, int tournamentSize,
-                     Problem *problem);
+                     double crossoverRate, int maxEvaluations, int tournamentSize, Problem *problem,
+                     bool debug);
 
     /**
      * Perform tournament selection.
@@ -124,6 +125,7 @@ public:
     const int m_maxEvaluations = 0;
     int m_tournamentSize = 0;
     Problem *m_problem;
+    bool m_debug = false;
 
     int m_evaluationsCount = 0;
 

@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -14,6 +16,8 @@
 #include "Problems/C03Problem.hpp"
 #include "Problems/C04Problem.hpp"
 #include "Problems/C05Problem.hpp"
+
+constexpr bool DEBUG = false;
 
 std::mutex resultMutex;
 double bestResult =
@@ -46,12 +50,14 @@ int main() {
     std::vector<int> dimensions = {10, 30};
 
     // Define ranges and increments for parameters to be varied
-    std::vector<unsigned long> popSizes = {30, 50, 70};
+    std::vector<unsigned long> popSizes = {50, 100, 500};
     std::vector<double> mutationRates = {0.01, 0.05, 0.1};
     std::vector<double> crossoverRates = {0.6, 0.7, 0.8};
     std::vector<int> tournamentSizes = {3, 5, 7};
 
     std::vector<std::thread> threads;
+    std::atomic<int> completedThreads = 0;
+    auto startTotal = std::chrono::high_resolution_clock::now();
 
     // Loop to vary parameters
     for (unsigned long popSize : popSizes) {
@@ -65,16 +71,34 @@ int main() {
                     problems.push_back(std::make_shared<C04Problem>());
                     problems.push_back(std::make_shared<C05Problem>());
 
-                    threads.push_back(std::thread(runAndCompare, popSize, mutationRate,
-                                                  crossoverRate, tournamentSize, problems,
-                                                  dimensions, RUNS));
+                    int totalThreads = popSizes.size() * mutationRates.size() *
+                                       crossoverRates.size() * tournamentSizes.size() *
+                                       problems.size();
+
+                    threads.emplace_back([=, &completedThreads, &startTotal, &totalThreads] {
+                        runAndCompare(popSize, mutationRate, crossoverRate, tournamentSize,
+                                      problems, dimensions, RUNS);
+                        completedThreads++;
+                        double avgTimePerThread =
+                            std::chrono::duration<double>(
+                                std::chrono::high_resolution_clock::now() - startTotal)
+                                .count() /
+                            completedThreads;
+                        int remainingThreads = totalThreads - completedThreads;
+                        double remainingTime = avgTimePerThread * remainingThreads;
+                        std::cout << "Threads completed: " << completedThreads
+                                  << ". Estimated remaining time: " << remainingTime << "s.\n";
+                    });
                 }
             }
         }
     }
+
     // Waits for all threads to finish
     for (auto &thread : threads) {
-        thread.join();
+        if (thread.joinable()) {
+            thread.join();
+        }
     }
 
     std::cout << "Best parameters: " << bestParameters << " with result: " << bestResult << '\n';
@@ -158,10 +182,13 @@ std::pair<double, std::string> runGeneticAlgorithm(
 
             for (int i = 0; i < RUNS; ++i) {
                 GeneticAlgorithm ga(popSize, D, mutationRate, crossoverRate, maxEvaluations,
-                                    tournamentSize, problemInstance.get());
+                                    tournamentSize, problemInstance.get(), DEBUG);
                 auto stats = ga.evolve();
                 Individual bestIndividual = ga.getBestIndividual();
-                // bestIndividual.print();
+
+                if (DEBUG) {
+                    bestIndividual.print();
+                }
 
                 allBestResults.push_back(bestIndividual.getFitness());
                 allViolations.push_back(stats.constraintViolations.back());

@@ -9,7 +9,7 @@
 
 GeneticAlgorithm::GeneticAlgorithm(unsigned long popSize, int chromosomeLength, double mutationRate,
                                    double crossoverRate, int maxEvaluations, int tournamentSize,
-                                   Problem *problem)
+                                   Problem *problem, bool debug)
         : m_popSize(popSize),
           m_chromosomeLength(chromosomeLength),
           m_mutationRate(mutationRate),
@@ -17,6 +17,7 @@ GeneticAlgorithm::GeneticAlgorithm(unsigned long popSize, int chromosomeLength, 
           m_maxEvaluations(maxEvaluations),
           m_tournamentSize(tournamentSize),
           m_problem(problem),
+          m_debug(debug),
           m_evaluationsCount(0),
           gen(std::random_device{}()),
           dis(0.0, 1.0) {
@@ -70,7 +71,6 @@ void GeneticAlgorithm::mutate(Individual &ind) {
         }
     }
 }
-
 GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
     GeneticAlgorithm::Statistics stats;
 
@@ -82,6 +82,7 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
     while (m_evaluationsCount < m_maxEvaluations) {
         int prevEvaluationsCount = m_evaluationsCount;
         std::vector<Individual> newPopulation;
+
         for (unsigned long i = 0; i < m_popSize; i += 2) {
             Individual parent1 =
                 tournamentSelection(m_tournamentSize);  // Select parents using tournament selection
@@ -94,12 +95,29 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
                 newPopulation.push_back(parent2);
             }
         }
-        m_population = newPopulation;  // Replace the current population with the new population
-        for (Individual &ind : m_population) {
-            if (ind.m_fitness < m_bestIndividual.m_fitness) {
-                m_bestIndividual = ind;  // Update the best individual if needed
-            }
-        }
+        // Replace the current population with the best individuals from the old and new population
+        std::sort(m_population.begin(), m_population.end(), [](Individual a, Individual b) {
+            return a.m_fitness < b.m_fitness;  // Sort in ascending order
+        });
+
+        std::sort(newPopulation.begin(), newPopulation.end(), [](Individual a, Individual b) {
+            return a.m_fitness < b.m_fitness;  // Sort in ascending order
+        });
+
+        unsigned long keepFromOldPopulation = m_popSize / 2;
+        unsigned long keepFromNewPopulation = m_popSize - keepFromOldPopulation;
+
+        std::vector<Individual> mergedPopulation(m_population.begin(),
+                                                 m_population.begin() + keepFromOldPopulation);
+        mergedPopulation.insert(mergedPopulation.end(), newPopulation.begin(),
+                                newPopulation.begin() + keepFromNewPopulation);
+
+        m_population = mergedPopulation;
+
+        m_bestIndividual =
+            *std::min_element(m_population.begin(), m_population.end(),
+                              [](Individual a, Individual b) { return a.m_fitness < b.m_fitness; });
+
         // Record statistics at 2000D, 10000D, 20000D evaluations
         if ((prevEvaluationsCount < 2000 * m_chromosomeLength &&
              m_evaluationsCount >= 2000 * m_chromosomeLength) ||
@@ -111,12 +129,13 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
             stats.worstResults.push_back(getWorstFitness());
             stats.medianResults.push_back(getMedianFitness());
 
-            // Print statistics
-            // std::cout << "Function evaluations: " << m_evaluationsCount << '\n';
-            // std::cout << "Best fitness: " << getBestFitness() << '\n';
-            // std::cout << "Worst fitness: " << getWorstFitness() << '\n';
-            // std::cout << "Median fitness: " << getMedianFitness() << '\n';
-
+            if (m_debug) {
+                // Print statistics
+                std::cout << "Function evaluations: " << m_evaluationsCount << '\n';
+                std::cout << "Best fitness: " << getBestFitness() << '\n';
+                std::cout << "Worst fitness: " << getWorstFitness() << '\n';
+                std::cout << "Median fitness: " << getMedianFitness() << '\n';
+            }
             // Calculate violations and v for the best individual
             auto chromosome = m_bestIndividual.getChromosome();
             auto [violations, v] = m_problem->calculateViolations(chromosome);
@@ -127,12 +146,14 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
                 stats.vValues[i].push_back(v[i]);
             }
 
-            // std::cout
-            //     << "Number of constraints violated by the best individual for each penalty value:
-            //     "
-            //     << violations[0] << ", " << violations[1] << ", " << violations[2] << '\n';
-            // std::cout << "Value of v for the best individual for each penalty value: " << v[0]
-            //           << ", " << v[1] << ", " << v[2] << '\n';
+            if (m_debug) {
+                std::cout << "Number of constraints violated by the best individual for each "
+                             "penalty value: "
+                          << violations[0] << ", " << violations[1] << ", " << violations[2]
+                          << '\n';
+                std::cout << "Value of v for the best individual for each penalty value: " << v[0]
+                          << ", " << v[1] << ", " << v[2] << '\n';
+            }
         }
     }
     return stats;
