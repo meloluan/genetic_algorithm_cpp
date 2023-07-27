@@ -50,10 +50,15 @@ int main() {
     std::vector<int> dimensions = {10, 30};
 
     // Define ranges and increments for parameters to be varied
-    std::vector<unsigned long> popSizes = {50, 100, 500};
-    std::vector<double> mutationRates = {0.01, 0.05, 0.1};
-    std::vector<double> crossoverRates = {0.6, 0.7, 0.8};
-    std::vector<int> tournamentSizes = {3, 5, 7};
+    // std::vector<unsigned long> popSizes = {50, 100, 500};
+    // std::vector<double> mutationRates = {0.01, 0.05, 0.1};
+    // std::vector<double> crossoverRates = {0.6, 0.7, 0.8};
+    // std::vector<int> tournamentSizes = {3, 5, 7};
+
+    std::vector<unsigned long> popSizes = {50};
+    std::vector<double> mutationRates = {0.05};
+    std::vector<double> crossoverRates = {0.6};
+    std::vector<int> tournamentSizes = {5};
 
     std::vector<std::thread> threads;
     std::atomic<int> completedThreads = 0;
@@ -144,15 +149,16 @@ void printStats(GeneticAlgorithm::Statistics stats) {
     // Imprime o número de violações de restrições
     int totalViolations = 0;
     for (const auto &v : stats.constraintViolations) {
-        totalViolations += std::accumulate(v.begin(), v.end(), 0);
+        totalViolations += v;
     }
     std::cout << "Number of Constraint Violations: " << totalViolations << '\n';
 
-    double totalV = 0;
-    for (const auto &v : stats.vValues) {
-        totalV += std::accumulate(v.begin(), v.end(), 0.0);
-    }
-    std::cout << "Value of v: " << totalV / (stats.vValues.size() * stats.vValues[0].size())
+    // double totalV = 0;
+    // for (const auto &v : stats.vValues) {
+    //     totalV += std::accumulate(v.begin(), v.end(), 0.0);
+    // }
+    std::cout << "Value of v: "
+              << stats.vValues[0]  // totalV / (stats.vValues.size() * stats.vValues[0].size())
               << '\n';
     std::cout << "-------------------------\n";
 }
@@ -168,8 +174,8 @@ std::pair<double, std::string> runGeneticAlgorithm(
 
         for (auto &problemInstance : problems) {
             std::vector<double> allBestResults;
-            std::vector<std::vector<int>> allViolations;
-            std::vector<std::vector<double>> allVValues;
+            std::vector<std::array<int, 3>> allViolations;
+            std::vector<double> allVValues;
 
             if (std::dynamic_pointer_cast<C02Problem>(problemInstance) != nullptr) {
                 std::dynamic_pointer_cast<C02Problem>(problemInstance)
@@ -191,8 +197,8 @@ std::pair<double, std::string> runGeneticAlgorithm(
                 }
 
                 allBestResults.push_back(bestIndividual.getFitness());
-                allViolations.push_back(stats.constraintViolations.back());
-                allVValues.push_back(stats.vValues.back());
+                allViolations.push_back(stats.constraintViolations);
+                allVValues.push_back(stats.vValues[0]);
             }
 
             Stats runStats;
@@ -211,12 +217,12 @@ std::pair<double, std::string> runGeneticAlgorithm(
             std::array<int, 3> totalViolations = {0, 0, 0};
             std::array<double, 3> avgVValues = {0, 0, 0};
 
-            for (int i = 0; i < RUNS; ++i) {
-                for (int j = 0; j < 3; ++j) {
-                    totalViolations[j] += allViolations[i][j];
-                    avgVValues[j] += allVValues[i][j];
-                }
+            // for (int i = 0; i < RUNS; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                totalViolations[j] += allViolations[0][j];
+                avgVValues[j] += allVValues[0];
             }
+            // }
 
             for (int j = 0; j < 3; ++j) {
                 avgVValues[j] /= RUNS;

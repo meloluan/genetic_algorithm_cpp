@@ -28,7 +28,7 @@ public:
      * @var    std::vector<double> Statistics::medianResults
      *         A vector storing the median fitness value found at each evaluation point.
      *
-     * @var    std::array<std::vector<int>> Statistics::constraintViolations
+     * @var    std::array<int, 3> Statistics::constraintViolations
      *         A vector storing the number of constraint violations of the best individual at each
      *         evaluation point, for each penalty value.
      *
@@ -40,10 +40,8 @@ public:
         std::vector<double> bestResults;
         std::vector<double> worstResults;
         std::vector<double> medianResults;
-        std::array<std::vector<int>, 3> constraintViolations = {
-            std::vector<int>(), std::vector<int>(), std::vector<int>()};
-        std::array<std::vector<double>, 3> vValues = {std::vector<double>(), std::vector<double>(),
-                                                      std::vector<double>()};
+        std::array<int, 3> constraintViolations = {0, 0, 0};
+        std::array<double, 3> vValues = {.0, .0, .0};
     };
 
     /**

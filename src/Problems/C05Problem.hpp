@@ -141,62 +141,71 @@ public:
 
         return {g1, g2};
     }
-
     double penaltyFunction(std::vector<double> &chromosome) override {
         double penalty = 0.0;
+        auto v = m_v;
 
         auto [g1, g2] = multipleConstraint(chromosome);
 
         // Constraint g1(X)
         if (g1 > 0.0) {
             penalty += g1;
+            v += g1;
         }
 
         // Constraint g2(X)
         if (g2 > 0.0) {
             penalty += g2;
+            v += g2;
         }
 
-        // Limits of the problem
+        // Boundaries of the problem
         for (double gene : chromosome) {
             if (gene < m_lowerBound) {
-                penalty += std::abs(gene - m_lowerBound);
+                double violation =
+                    std::abs(m_lowerBound - gene);  // Distance from point to lower limit
+                penalty += violation;
+
+                // Check violation levels
+                if (violation > 1.0) {
+                    m_c[0]++;
+                    m++;
+                } else if (violation > 0.01) {
+                    m_c[1]++;
+                    m++;
+                } else if (violation > 0.0001) {
+                    m_c[2]++;
+                    m++;
+                }
             } else if (gene > m_upperBound) {
-                penalty += std::abs(gene - m_upperBound);
+                double violation =
+                    std::abs(gene - m_upperBound);  // Distance from point to lower limit
+                penalty += violation;
+
+                // Check violation levels
+                if (violation > 1.0) {
+                    m_c[0]++;
+                    m++;
+                } else if (violation > 0.01) {
+                    m_c[1]++;
+                    m++;
+                } else if (violation > 0.0001) {
+                    m_c[2]++;
+                    m++;
+                }
             }
+        }
+
+        if (m > 0) {
+            v /= m;  // Calculate the mean violation
+            m_v = (m_v + v) / 2;
         }
 
         return penalty;
     }
 
-    std::pair<std::array<int, 3>, std::array<double, 3>> calculateViolations(
-        std::vector<double> &x) {
-        std::array<int, 3> numViolations = {0, 0, 0};
-        std::array<double, 3> totalViolations = {0.0, 0.0, 0.0};
+    std::pair<double, std::array<int, 3>> calculateViolations() { return {m_v, m_c}; }
 
-        for (double xi : x) {
-            if (xi < m_lowerBound) {
-                for (int i = 0; i < 3; ++i) {
-                    numViolations[i]++;
-                    totalViolations[i] += m_lowerBound - xi;  // Distance from point to lower limit
-                }
-            } else if (xi > m_upperBound) {
-                for (int i = 0; i < 3; ++i) {
-                    numViolations[i]++;
-                    totalViolations[i] += xi - m_upperBound;  // Distance from point to upper limit
-                }
-            }
-        }
-
-        // Calculate the average of violations
-        std::array<double, 3> meanViolations;
-        for (int i = 0; i < 3; ++i) {
-            meanViolations[i] =
-                (numViolations[i] > 0) ? totalViolations[i] / numViolations[i] : 0.0;
-        }
-
-        return {numViolations, meanViolations};
-    }
     double constraint(std::vector<double> &x) override {
         (void)x;
         return 0.0;

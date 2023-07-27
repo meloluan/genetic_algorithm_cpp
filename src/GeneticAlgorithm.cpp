@@ -75,8 +75,8 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
     GeneticAlgorithm::Statistics stats;
 
     for (int i = 0; i < 3; ++i) {
-        stats.constraintViolations[i] = std::vector<int>();
-        stats.vValues[i] = std::vector<double>();
+        stats.constraintViolations[i] = 0;
+        stats.vValues[i] = .0;
     }
 
     while (m_evaluationsCount < m_maxEvaluations) {
@@ -138,12 +138,12 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
             }
             // Calculate violations and v for the best individual
             auto chromosome = m_bestIndividual.getChromosome();
-            auto [violations, v] = m_problem->calculateViolations(chromosome);
+            auto [v, violations] = m_problem->calculateViolations();
 
             // Push each individual violation and v value to the respective vectors
             for (int i = 0; i < 3; ++i) {
-                stats.constraintViolations[i].push_back(violations[i]);
-                stats.vValues[i].push_back(v[i]);
+                stats.constraintViolations[i] = violations[i];
+                stats.vValues[i] = v;
             }
 
             if (m_debug) {
@@ -151,8 +151,7 @@ GeneticAlgorithm::Statistics GeneticAlgorithm::evolve() {
                              "penalty value: "
                           << violations[0] << ", " << violations[1] << ", " << violations[2]
                           << '\n';
-                std::cout << "Value of v for the best individual for each penalty value: " << v[0]
-                          << ", " << v[1] << ", " << v[2] << '\n';
+                std::cout << "Value of v: " << v << '\n';
             }
         }
     }

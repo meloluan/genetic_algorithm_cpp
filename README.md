@@ -90,18 +90,18 @@ Please refer to each class's respective header file for a detailed description o
 
 In this section, we present the performance statistics of our Genetic Algorithm applied on different test scenarios. The collected metrics include the average and median of best results, standard deviation of best results, and the worst result across all runs. For each test scenario, a set of constraint values `c` and a variable `v` are also shown, which were utilized in the problem formulation. Here is a summary of the results:
 
-| Test Name | Avg of Best Results | Median of Best Results | Std Dev of Best Results | Worst Result | c values | v |
-|---|---|---|---|---|---|---|
-| D10_PC01 | 2.49619e-05 | 1.80786e-05 | 1.98283e-05 | 8.48197e-05 | {0, 0, 0} | 0 |
-| D10_PC02 | 0.00395181 | 0.00316344 | 0.0024601 | 0.00902461 | {0, 0, 0} | 0 |
-| D10_PC03 | 11.969 | 11.9347 | 0.296948 | 12.5765 | {0, 0, 0} | 0 |
-| D10_PC04 | 0.00124326 | 0.000843704 | 0.0010409 | 0.00463215 | {0, 0, 0} | 0 |
-| D10_PC05 | 0.000555726 | 0.00046865 | 0.000470755 | 0.00204942 | {0, 0, 0} | 0 |
-| D30_PC01 | 8.82674e-05 | 7.69451e-05 | 4.79432e-05 | 0.000209332 | {0, 0, 0} | 0 |
-| D30_PC02 | 0.546156 | 0.545064 | 0.163575 | 0.940985 | {0, 0, 0} | 0 |
-| D30_PC03 | 115.714 | 115.713 | 4.22425e-05 | 115.714 | {0, 0, 0} | 0 |
-| D30_PC04 | 0.000972671 | 0.000960464 | 0.000351143 | 0.00177272 | {0, 0, 0} | 0 |
-| D30_PC05 | 722.213 | 0.000217851 | 1755.99 | 7042.65 | {0, 0, 0} | 0 |
+| Test Case | Best Result | Average of Best Results | Median of Best Results | Standard Deviation of Best Results | Worst Result | c | v |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| D10_PC01 | 8.77038e-07 | 6.49674e-06 | 4.46655e-06 | 6.5599e-06 | 3.33636e-05 | {0, 0, 0} | 0 |
+| D10_PC02 | 9.14812e-05 | 0.000353264 | 0.000325097 | 0.000229435 | 0.00103464 | {0, 0, 0} | 0 |
+| D10_PC03 | 11.4304 | 11.539 | 11.507 | 0.0851401 | 11.7718 | {0, 0, 0} | 48678.5 |
+| D10_PC04 | 2.75686e-05 | 0.000127556 | 9.28679e-05 | 8.79477e-05 | 0.000383203 | {0, 8, 0} | 0 |
+| D10_PC05 | 2.18315e-06 | 5.55613e-05 | 5.05425e-05 | 3.02618e-05 | 0.000129976 | {0, 7, 0} | 6.61505e-28 |
+| D30_PC01 | 5.06715e-05 | 0.000127757 | 0.000123504 | 4.72301e-05 | 0.000252043 | {0, 1, 0} | 89963.6 |
+| D30_PC02 | 0.121619 | 1.19928 | 1.3675 | 0.441622 | 1.87486 | {0, 1, 0} | 105762 |
+| D30_PC03 | 115.713 | 115.714 | 115.714 | 4.79426e-05 | 115.714 | {0, 3, 0} | 4.58045 |
+| D30_PC04 | 0.000684405 | 0.00163714 | 0.00141389 | 0.00103173 | 0.00600676 | {1, 120, 0} | 0 |
+| D30_PC05 | 0.000101478 | 0.000270869 | 0.000233102 | 0.00017835 | 0.0009713 | {0, 263, 4} | 0 |
 
 The results reveal the effectiveness and robustness of the algorithm on various scenarios with different complexity levels. The comprehensive statistics help us understand not only the overall performance but also the variability and consistency of the algorithm's outcomes. 
 
